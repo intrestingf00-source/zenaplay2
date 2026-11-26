@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#070509" />
+<title>TIME BOMB — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/admin/admin.css?v=3" />
+</head>
+<body>
+<!-- login -->
+<div class="login" id="login">
+  <button class="lang-btn login-lang" data-lang-toggle type="button"><span data-lang-label>አማርኛ</span></button>
+  <form class="login-card" id="loginForm">
+    <div class="logo">💣</div>
+    <h1 data-i18n="admin.loginTitle">TIME BOMB</h1>
+    <p data-i18n="admin.loginSub">Admin control room</p>
+    <input id="adminPassword" type="password" data-i18n-ph="admin.password" placeholder="Admin password" autocomplete="current-password" />
+    <div class="err" id="loginError"></div>
+    <button class="save-btn" id="loginBtn" type="submit" data-i18n="admin.unlock">UNLOCK PANEL</button>
+  </form>
+</div>
+
+<div class="wrap" id="panel" style="display: none">
+  <header class="header">
+    <div class="brand">
+      <span class="logo">💣</span>
+      <div><b data-i18n="admin.brand">CONTROL ROOM</b><small data-i18n="admin.sub">Time Bomb admin</small></div>
+    </div>
+    <div class="header-right">
+      <span class="pill" id="dbPill">db: —</span>
+      <span class="pill" id="livePill">—</span>
+      <a class="btn-sm" href="/" target="_blank" rel="noopener" style="text-decoration: none" data-i18n="admin.gameLink">Game ↗</a>
+      <button class="btn-sm" id="logoutBtn" type="button" data-i18n="admin.exit">Exit</button>
+      <button class="lang-btn" data-lang-toggle type="button"><span data-lang-label>አማርኛ</span></button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat gold"><small data-i18n="stats.house">House earned</small><b id="sHouse">0</b></div>
+    <div class="stat green"><small data-i18n="stats.paid">Paid to winners</small><b id="sPaid">0</b></div>
+    <div class="stat"><small data-i18n="stats.rounds">Bombs played</small><b id="sRounds">0</b></div>
+    <div class="stat"><small data-i18n="stats.players">Players</small><b id="sPlayers">0</b></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <!-- live control -->
+      <section class="panel">
+        <div class="panel-head"><h2 data-i18n="live.title">Live control</h2><span id="roundTag">—</span></div>
+        <div class="live-box">
+          <div class="fuse" id="fuseBox">
+            <small data-i18n="live.fuse">fuse</small>
+            <b id="fuse">—</b>
+          </div>
+          <div class="live-meta">
+            <div class="row2"><span data-i18n="live.pot">Pot</span><b class="pot" id="livePot">0 ETB</b></div>
+            <div class="row2"><span data-i18n="live.last">Last depositor</span><b id="liveLast">—</b></div>
+            <div class="row2"><span data-i18n="live.pushes">Pushes this round</span><b id="livePushes">0</b></div>
+            <div class="row2"><span data-i18n="live.players">Players in round</span><b id="livePlayers">0</b></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" id="pauseBtn" class="warn">Pause game</button>
+          <button type="button" id="endBtn" class="danger">End round now</button>
+          <button type="button" id="cancelBtn" class="danger">Cancel &amp; refund</button>
+          <button type="button" id="startBtn" class="go">Start new round</button>
+        </div>
+        <p class="hint" data-i18n="live.hint">“End round now” pays the current last depositor 90% instantly. “Cancel &amp; refund” returns every push in the round and pays nobody.</p>
+      </section>
+
+      <!-- settings -->
+      <section class="panel">
+        <div class="panel-head"><h2 data-i18n="set.title">Game settings</h2><span id="settingsSaved">—</span></div>
+        <form id="settingsForm">
+          <div class="form-grid">
+            <div class="field"><label data-i18n="set.entryFee">Entry fee (ETB)</label><input id="cfgEntryFee" type="number" min="1" max="100000" step="1" /></div>
+            <div class="field"><label data-i18n="set.houseCut">House cut (%)</label><input id="cfgHouseCut" type="number" min="0" max="50" step="1" /></div>
+            <div class="field"><label data-i18n="set.startSeconds">Starting fuse (sec)</label><input id="cfgStartSeconds" type="number" min="5" max="600" step="1" /></div>
+            <div class="field"><label data-i18n="set.resetSeconds">Fuse after a push (sec)</label><input id="cfgResetSeconds" type="number" min="3" max="600" step="1" /></div>
+            <div class="field"><label data-i18n="set.startingBalance">New player wallet (ETB)</label><input id="cfgStartingBalance" type="number" min="0" max="1000000" step="10" /></div>
+            <div class="field"><label data-i18n="set.gap">Anti-spam gap (ms)</label><input id="cfgGap" type="number" min="0" max="10000" step="50" /></div>
+          </div>
+          <div class="switch-row">
+            <span data-i18n="set.autoStart">Auto-start the next bomb after each one</span>
+            <button type="button" class="switch" id="autoStartSwitch" aria-label="Toggle auto start"></button>
+          </div>
+          <button class="save-btn" id="saveSettings" type="submit" data-i18n="set.save">SAVE SETTINGS</button>
+        </form>
+        <p class="hint" data-i18n="set.hint">Changes apply live. A new entry fee / fuse length is used for the current round too.</p>
+      </section>
+    </div>
+
+    <div>
+      <!-- players -->
+      <section class="panel">
+        <div class="panel-head"><h2 data-i18n="players.title">Players</h2><span id="playersTag">—</span></div>
+        <input class="search" id="userSearch" data-i18n-ph="players.search" placeholder="Search username or phone…" autocomplete="off" />
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="players.player">Player</th>
+                <th data-i18n="players.wallet">Wallet</th>
+                <th data-i18n="players.wins">Wins</th>
+                <th data-i18n="players.actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+        <p class="hint" data-i18n="players.hint">Credit wallets manually until a payment provider is connected. Debits cannot take a wallet below zero.</p>
+      </section>
+
+      <!-- rounds -->
+      <section class="panel">
+        <div class="panel-head"><h2 data-i18n="rounds.title">Recent rounds</h2><span id="roundsTag">—</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="rounds.no">#</th>
+                <th data-i18n="rounds.winner">Winner</th>
+                <th data-i18n="rounds.pot">Pot</th>
+                <th data-i18n="rounds.payout">Payout</th>
+                <th data-i18n="rounds.house">House</th>
+                <th data-i18n="rounds.state">State</th>
+              </tr>
+            </thead>
+            <tbody id="roundsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- balance modal -->
+<div class="modal" id="balanceModal">
+  <div class="modal-card">
+    <h3 id="balTitle" data-i18n="modal.title">Player wallet</h3>
+    <p id="balSub" data-i18n="modal.sub">Amount in ETB</p>
+    <input id="balAmount" type="number" min="1" step="1" placeholder="100" />
+    <div class="modal-actions">
+      <button type="button" class="mini plus" id="balCredit" data-i18n="modal.credit">DEPOSIT</button>
+      <button type="button" class="mini minus" id="balDebit" data-i18n="modal.debit">WITHDRAW</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shared/i18n.js?v=3"></script>
+<script src="/admin/admin.js?v=3"></script>
+</body>
+</html>
