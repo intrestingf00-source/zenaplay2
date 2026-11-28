@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#070509" />
+<meta name="color-scheme" content="dark" />
+<title>TIME BOMB — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/admin/admin.css?v=11" />
+</head>
+<body>
+<!-- login -->
+<div class="login" id="login">
+  <button class="lang-btn login-lang" data-lang-toggle type="button"><span data-lang-label>አማርኛ</span></button>
+  <form class="login-card" id="loginForm">
+    <div class="logo">💣</div>
+    <h1 data-i18n="admin.loginTitle">TIME BOMB</h1>
+    <p data-i18n="admin.loginSub">Admin control room</p>
+    <input id="adminPassword" type="password" data-i18n-ph="admin.password" placeholder="Admin password" autocomplete="current-password" />
+    <div class="err" id="loginError"></div>
+    <button class="save-btn" id="loginBtn" type="submit" data-i18n="admin.unlock">UNLOCK PANEL</button>
+  </form>
+</div>
+
+<div class="wrap" id="panel" style="display: none">
+  <header class="header">
+    <div class="brand">
+      <span class="logo">💣</span>
+      <div><b data-i18n="admin.brand">CONTROL ROOM</b><small data-i18n="admin.sub">Time Bomb admin</small></div>
+    </div>
+    <div class="header-right">
+      <span class="pill" id="dbPill">db: —</span>
+      <a class="btn-sm" href="/" target="_blank" rel="noopener" style="text-decoration: none" data-i18n="admin.menuLink">Menu ↗</a>
+      <button class="btn-sm" id="logoutBtn" type="button" data-i18n="admin.exit">Exit</button>
+      <button class="lang-btn" data-lang-toggle type="button"><span data-lang-label>አማርኛ</span></button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="menu" id="menu" aria-label="Admin menu">
+      <div class="menu-group">
+        <span class="menu-label" data-i18n="amenu.general">General</span>
+        <button class="menu-item active" type="button" data-view="overview">
+          <span class="ic">◉</span><b data-i18n="amenu.overview">Overview</b>
+        </button>
+      </div>
+
+      <div class="menu-group">
+        <span class="menu-label" data-i18n="amenu.games">Games</span>
+        <button class="menu-item" type="button" data-view="bomb">
+          <span class="ic">💣</span><b data-i18n="amenu.bomb">Time Bomb</b>
+          <em class="state-pill" id="menuBombState">—</em>
+        </button>
+        <button class="menu-item" type="button" data-view="crash">
+          <span class="ic">🚀</span><b data-i18n="acrash.title">Crash</b>
+          <em class="state-pill" id="menuCrashState">—</em>
+        </button>
+        <button class="menu-item" type="button" data-view="keno">
+          <span class="ic">🔢</span><b data-i18n="amenu.kenoTitle">Keno</b>
+        </button>
+        <button class="menu-item" type="button" data-view="mines">
+          <span class="ic">💎</span><b data-i18n="amenu.minesTitle">Mines</b>
+          <em class="state-pill" id="menuMinesState">—</em>
+        </button>
+      </div>
+
+      <div class="menu-group">
+        <span class="menu-label" data-i18n="amenu.money">Money</span>
+        <button class="menu-item" type="button" data-view="deposits">
+          <span class="ic">💳</span><b data-i18n="amenu.deposits">Deposits</b>
+          <em class="count-pill" id="menuDeposits" hidden>0</em>
+        </button>
+        <button class="menu-item" type="button" data-view="players">
+          <span class="ic">👥</span><b data-i18n="amenu.players">Players</b>
+        </button>
+      </div>
+
+      <div class="menu-group">
+        <span class="menu-label" data-i18n="amenu.history">History</span>
+        <button class="menu-item" type="button" data-view="rounds">
+          <span class="ic">🕘</span><b data-i18n="amenu.rounds">Bomb rounds</b>
+        </button>
+      </div>
+
+      <p class="menu-foot" id="menuFoot">—</p>
+    </nav>
+
+    <div class="views">
+      <!-- overview -->
+      <section class="view active" data-view="overview">
+        <div class="view-head">
+          <h1 data-i18n="amenu.overview">Overview</h1>
+          <p data-i18n="amenu.overviewSub">Both games, the wallets and the money at a glance.</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat gold"><small data-i18n="stats.house">House earned</small><b id="sHouse">0</b></div>
+          <div class="stat green"><small data-i18n="stats.paid">Paid to winners</small><b id="sPaid">0</b></div>
+          <div class="stat"><small data-i18n="stats.rounds">Bombs played</small><b id="sRounds">0</b></div>
+          <div class="stat"><small data-i18n="stats.players">Players</small><b id="sPlayers">0</b></div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2 data-i18n="agames.title">Your games</h2>
+            <span data-i18n="agames.sub">Live status and one-tap controls</span>
+          </div>
+          <div class="games">
+            <article class="game-tile">
+              <span class="art bomb" aria-hidden="true">💣</span>
+              <div class="game-info">
+                <h3 data-i18n="amenu.bomb">Time Bomb</h3>
+                <p id="tileBombMeta">—</p>
+              </div>
+              <div class="game-side">
+                <span class="state-pill" id="tileBombState">—</span>
+                <div class="game-actions">
+                  <button class="mini" type="button" id="tileBombPause">Pause</button>
+                  <button class="mini" type="button" data-goto="bomb" data-i18n="agames.manage">Manage</button>
+                  <a class="mini" href="/game" target="_blank" rel="noopener" data-i18n="agames.play">Play ↗</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="game-tile">
+              <span class="art"><img src="/shared/crash.jpg" alt="" /></span>
+              <div class="game-info">
+                <h3 data-i18n="acrash.title">Crash</h3>
+                <p id="tileCrashMeta">—</p>
+              </div>
+              <div class="game-side">
+                <span class="state-pill" id="tileCrashState">—</span>
+                <div class="game-actions">
+                  <button class="mini" type="button" id="tileCrashPause">Pause</button>
+                  <button class="mini" type="button" data-goto="crash" data-i18n="agames.manage">Manage</button>
+                  <a class="mini" href="/crash" target="_blank" rel="noopener" data-i18n="agames.play">Play ↗</a>
+                </div>
+              </div>
+            </article>
+            <article class="game-tile">
+              <span class="art" aria-hidden="true">🔢</span>
+              <div class="game-info">
+                <h3 data-i18n="amenu.kenoTitle">Keno</h3>
+                <p id="tileKenoMeta">—</p>
+              </div>
+              <div class="game-side">
+                <span class="state-pill" id="tileKenoState">—</span>
+                <div class="game-actions">
+                  <button class="mini" type="button" id="tileKenoPause">Pause</button>
+                  <button class="mini" type="button" data-goto="keno" data-i18n="agames.manage">Manage</button>
+                  <a class="mini" href="/keno" target="_blank" rel="noopener" data-i18n="agames.play">Play ↗</a>
+                </div>
+              </div>
+            </article>
+            <article class="game-tile">
+              <span class="art" aria-hidden="true">💎</span>
+              <div class="game-info">
+                <h3 data-i18n="amenu.minesTitle">Mines</h3>
+                <p id="tileMinesMeta">—</p>
+              </div>
+              <div class="game-side">
+                <span class="state-pill" id="tileMinesState">—</span>
+                <div class="game-actions">
+                  <button class="mini" type="button" id="tileMinesPause">Pause</button>
+                  <button class="mini" type="button" data-goto="mines" data-i18n="agames.manage">Manage</button>
+                  <a class="mini" href="/mines" target="_blank" rel="noopener" data-i18n="agames.play">Play ↗</a>
+                </div>
+              </div>
+            </article>
+          </div>
+          <p class="hint" data-i18n="agames.hint">Pause stops new rounds instantly. Open a game to change its limits, timings and house edge.</p>
+        </section>
+      </section>
+
+      <!-- time bomb -->
+      <section class="view" data-view="bomb">
+        <div class="view-head">
+          <h1 data-i18n="amenu.bombTitle">Time Bomb</h1>
+          <p data-i18n="amenu.bombSub">Fuse, pot, payouts and the live round.</p>
+        </div>
+        <div class="panel-grid">
+          <section class="panel">
+            <div class="panel-head"><h2 data-i18n="live.title">Live control</h2><span id="roundTag">—</span></div>
+            <div class="live-box">
+              <div class="fuse" id="fuseBox">
+                <small data-i18n="live.fuse">fuse</small>
+                <b id="fuse">—</b>
+              </div>
+              <div class="live-meta">
+                <div class="row2"><span data-i18n="live.pot">Pot</span><b class="pot" id="livePot">0 ETB</b></div>
+                <div class="row2"><span data-i18n="live.last">Last depositor</span><b id="liveLast">—</b></div>
+                <div class="row2"><span data-i18n="live.pushes">Pushes this round</span><b id="livePushes">0</b></div>
+                <div class="row2"><span data-i18n="live.players">Players in round</span><b id="livePlayers">0</b></div>
+              </div>
+            </div>
+            <div class="actions">
+              <button type="button" id="pauseBtn" class="warn">Pause game</button>
+              <button type="button" id="endBtn" class="danger">End round now</button>
+              <button type="button" id="cancelBtn" class="danger">Cancel &amp; refund</button>
+              <button type="button" id="startBtn" class="go">Start new round</button>
+            </div>
+            <p class="hint" data-i18n="live.hint">“End round now” pays the current last depositor 90% instantly. “Cancel &amp; refund” returns every push in the round and pays nobody.</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2 data-i18n="set.title">Game settings</h2><span id="settingsSaved">—</span></div>
+            <form id="settingsForm">
+              <div class="form-grid">
+                <div class="field"><label data-i18n="set.entryFee">Entry fee (ETB)</label><input id="cfgEntryFee" type="number" min="1" max="100000" step="1" /></div>
+                <div class="field"><label data-i18n="set.houseCut">House cut (%)</label><input id="cfgHouseCut" type="number" min="0" max="50" step="1" /></div>
+                <div class="field"><label data-i18n="set.startSeconds">Starting fuse (sec)</label><input id="cfgStartSeconds" type="number" min="5" max="600" step="1" /></div>
+                <div class="field"><label data-i18n="set.resetSeconds">Fuse after a push (sec)</label><input id="cfgResetSeconds" type="number" min="3" max="600" step="1" /></div>
+                <div class="field"><label data-i18n="set.startingBalance">New player wallet (ETB)</label><input id="cfgStartingBalance" type="number" min="0" max="1000000" step="10" /></div>
+                <div class="field"><label data-i18n="set.gap">Anti-spam gap (ms)</label><input id="cfgGap" type="number" min="0" max="10000" step="50" /></div>
+              </div>
+              <div class="switch-row">
+                <span data-i18n="set.autoStart">Auto-start the next bomb after each one</span>
+                <button type="button" class="switch" id="autoStartSwitch" aria-label="Toggle auto start"></button>
+              </div>
+              <button class="save-btn" id="saveSettings" type="submit" data-i18n="set.save">SAVE SETTINGS</button>
+            </form>
+            <p class="hint" data-i18n="set.hint">Changes apply live. A new entry fee / fuse length is used for the current round too.</p>
+          </section>
+        </div>
+      </section>
+
+      <!-- crash -->
+      <section class="view" data-view="crash">
+        <div class="view-head">
+          <h1 data-i18n="amenu.crashTitle">Crash</h1>
+          <p data-i18n="amenu.crashSub">Rocket rounds, bet limits and the house edge.</p>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="acrash.title">Crash</h2><span id="crashPhase">—</span></div>
+          <div class="live-box" style="margin-bottom: 14px">
+            <div class="fuse">
+              <small data-i18n="acrash.mult">Multiplier</small>
+              <b id="crashMult">—</b>
+            </div>
+            <div class="live-meta">
+              <div class="row2"><span data-i18n="acrash.round">Round</span><b id="crashRound">—</b></div>
+              <div class="row2"><span data-i18n="acrash.bets">Bets</span><b id="crashBets">0</b></div>
+              <div class="row2"><span data-i18n="acrash.staked">Staked</span><b id="crashStaked">0</b></div>
+              <div class="row2"><span data-i18n="acrash.paid">Paid out</span><b id="crashPaid">0</b></div>
+              <div class="row2"><span data-i18n="acrash.profit">House profit</span><b id="crashProfit" style="color: var(--amber)">0</b></div>
+            </div>
+          </div>
+          <form id="crashForm">
+            <div class="form-grid">
+              <div class="field"><label data-i18n="acrash.minBet">Min bet (ETB)</label><input id="crashMin" type="number" min="1" max="100000" step="1" /></div>
+              <div class="field"><label data-i18n="acrash.maxBet">Max bet (ETB)</label><input id="crashMax" type="number" min="1" max="1000000" step="10" /></div>
+              <div class="field"><label data-i18n="acrash.betSeconds">Betting window (sec)</label><input id="crashSeconds" type="number" min="3" max="60" step="1" /></div>
+              <div class="field"><label data-i18n="acrash.houseEdge">House edge (%)</label><input id="crashEdge" type="number" min="0" max="20" step="0.5" /></div>
+            </div>
+            <div class="actions">
+              <button type="button" id="crashPause" class="warn">Pause crash</button>
+              <button type="button" id="crashStop" class="danger">Crash now</button>
+            </div>
+            <button class="save-btn" id="crashSave" type="submit" data-i18n="acrash.save">SAVE CRASH SETTINGS</button>
+          </form>
+          <p class="hint" data-i18n="acrash.hint">House profit is every stake minus every payout across all crash rounds.</p>
+        </section>
+      </section>
+
+      <!-- keno -->
+      <section class="view" data-view="keno">
+        <div class="view-head">
+          <h1 data-i18n="amenu.kenoTitle">Keno</h1>
+          <p data-i18n="amenu.kenoSub">Bet limits, pick limits and recent draws.</p>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="akeno.title">Keno</h2><span id="kenoStateTag">—</span></div>
+          <div class="stats" style="margin-bottom: 14px">
+            <div class="stat"><small data-i18n="akeno.draws">Draws played</small><b id="kenoDraws">0</b></div>
+            <div class="stat"><small data-i18n="akeno.staked">Staked</small><b id="kenoStaked">0</b></div>
+            <div class="stat green"><small data-i18n="akeno.paid">Paid out</small><b id="kenoPaid">0</b></div>
+            <div class="stat gold"><small data-i18n="akeno.profit">House profit</small><b id="kenoProfit">0</b></div>
+          </div>
+          <form id="kenoForm">
+            <div class="form-grid">
+              <div class="field"><label data-i18n="akeno.minBet">Min bet (ETB)</label><input id="kenoMin" type="number" min="1" max="100000" step="1" /></div>
+              <div class="field"><label data-i18n="akeno.maxBet">Max bet (ETB)</label><input id="kenoMax" type="number" min="1" max="1000000" step="10" /></div>
+              <div class="field"><label data-i18n="akeno.maxPicks">Max numbers per draw</label><input id="kenoPicks" type="number" min="1" max="10" step="1" /></div>
+            </div>
+            <div class="actions">
+              <button type="button" id="kenoPause" class="warn">Pause keno</button>
+            </div>
+            <button class="save-btn" id="kenoSave" type="submit" data-i18n="akeno.save">SAVE KENO SETTINGS</button>
+          </form>
+          <p class="hint" data-i18n="akeno.hint">The paytable returns about 95% of stakes over time. House profit is every stake minus every payout.</p>
+        </section>
+
+        <section class="panel" style="margin-top: 14px">
+          <div class="panel-head"><h2 data-i18n="akeno.recent">Recent draws</h2><span id="kenoRecentTag">—</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="akeno.player">Player</th>
+                  <th data-i18n="akeno.mode">Mode</th>
+                  <th data-i18n="akeno.picks">Picks</th>
+                  <th data-i18n="akeno.hits">Hits</th>
+                  <th data-i18n="akeno.stake">Stake</th>
+                  <th data-i18n="akeno.result">Result</th>
+                </tr>
+              </thead>
+              <tbody id="kenoBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- mines -->
+      <section class="view" data-view="mines">
+        <div class="view-head">
+          <h1 data-i18n="amenu.minesTitle">Mines</h1>
+          <p data-i18n="amenu.minesSub">Bombs, bet limits, house edge and recent rounds.</p>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="amines.title">Mines</h2><span id="minesStateTag">—</span></div>
+          <div class="stats" style="margin-bottom: 14px">
+            <div class="stat"><small data-i18n="amines.rounds">Rounds played</small><b id="minesRounds">0</b></div>
+            <div class="stat"><small data-i18n="amines.staked">Staked</small><b id="minesStaked">0</b></div>
+            <div class="stat green"><small data-i18n="amines.paid">Paid out</small><b id="minesPaid">0</b></div>
+            <div class="stat gold"><small data-i18n="amines.profit">House profit</small><b id="minesProfit">0</b></div>
+          </div>
+          <form id="minesForm">
+            <div class="form-grid">
+              <div class="field"><label data-i18n="amines.minBet">Min bet (ETB)</label><input id="minesMin" type="number" min="1" max="100000" step="1" /></div>
+              <div class="field"><label data-i18n="amines.maxBet">Max bet (ETB)</label><input id="minesMax" type="number" min="1" max="1000000" step="10" /></div>
+              <div class="field"><label data-i18n="amines.defaultMines">Default bombs</label><input id="minesDefault" type="number" min="1" max="24" step="1" /></div>
+              <div class="field"><label data-i18n="amines.houseEdge">House edge (%)</label><input id="minesEdge" type="number" min="0" max="20" step="0.5" /></div>
+              <div class="field"><label data-i18n="amines.maxMultiplier">Max win multiplier</label><input id="minesMaxMult" type="number" min="2" max="100000" step="10" /></div>
+            </div>
+            <div class="actions">
+              <button type="button" id="minesPause" class="warn">Pause mines</button>
+            </div>
+            <button class="save-btn" id="minesSave" type="submit" data-i18n="amines.save">SAVE MINES SETTINGS</button>
+          </form>
+          <p class="hint" data-i18n="amines.hint">Payouts come from the exact odds of clearing each tile, minus the house edge. Open rounds can always be finished or cashed out.</p>
+        </section>
+
+        <section class="panel" style="margin-top: 14px">
+          <div class="panel-head"><h2 data-i18n="amines.recent">Recent rounds</h2><span id="minesRecentTag">—</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="amines.player">Player</th>
+                  <th data-i18n="amines.minesCount">Bombs</th>
+                  <th data-i18n="amines.cleared">Cleared</th>
+                  <th data-i18n="amines.stake">Stake</th>
+                  <th data-i18n="amines.result">Result</th>
+                </tr>
+              </thead>
+              <tbody id="minesBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- deposits -->
+      <section class="view" data-view="deposits">
+        <div class="view-head">
+          <h1 data-i18n="amenu.deposits">Deposits</h1>
+          <p data-i18n="amenu.depositsSub">Approve or reject Telebirr requests.</p>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="req.title">Deposit requests</h2><span id="reqTag">—</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="req.player">Player</th>
+                  <th data-i18n="req.type">Type</th>
+                  <th data-i18n="req.amount">Amount</th>
+                  <th data-i18n="req.message">Message</th>
+                  <th data-i18n="req.actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reqBody"></tbody>
+            </table>
+          </div>
+          <p class="hint" data-i18n="req.hint">Approve moves the money in or out of the player wallet. Reject closes the request without touching the wallet.</p>
+        </section>
+      </section>
+
+      <!-- players -->
+      <section class="view" data-view="players">
+        <div class="view-head">
+          <h1 data-i18n="amenu.players">Players</h1>
+          <p data-i18n="amenu.playersSub">Wallets, bans and player history.</p>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="players.title">Players</h2><span id="playersTag">—</span></div>
+          <input class="search" id="userSearch" data-i18n-ph="players.search" placeholder="Search username or phone…" autocomplete="off" />
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="players.player">Player</th>
+                  <th data-i18n="players.wallet">Wallet</th>
+                  <th data-i18n="players.wins">Wins</th>
+                  <th data-i18n="players.actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+          <p class="hint" data-i18n="players.hint">Credit wallets manually until a payment provider is connected. Debits cannot take a wallet below zero.</p>
+        </section>
+      </section>
+
+      <!-- rounds -->
+      <section class="view" data-view="rounds">
+        <div class="view-head">
+          <h1 data-i18n="amenu.rounds">Bomb rounds</h1>
+          <p data-i18n="amenu.roundsSub">What happened in the last bombs.</p>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="rounds.title">Recent rounds</h2><span id="roundsTag">—</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="rounds.no">#</th>
+                  <th data-i18n="rounds.winner">Winner</th>
+                  <th data-i18n="rounds.pot">Pot</th>
+                  <th data-i18n="rounds.payout">Payout</th>
+                  <th data-i18n="rounds.house">House</th>
+                  <th data-i18n="rounds.state">State</th>
+                </tr>
+              </thead>
+              <tbody id="roundsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- balance modal -->
+<div class="modal" id="balanceModal">
+  <div class="modal-card">
+    <h3 id="balTitle" data-i18n="modal.title">Player wallet</h3>
+    <p id="balSub" data-i18n="modal.sub">Amount in ETB</p>
+    <input id="balAmount" type="number" min="1" step="1" placeholder="100" />
+    <div class="modal-actions">
+      <button type="button" class="mini plus" id="balCredit" data-i18n="modal.credit">DEPOSIT</button>
+      <button type="button" class="mini minus" id="balDebit" data-i18n="modal.debit">WITHDRAW</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shared/i18n.js?v=17"></script>
+<script src="/admin/admin.js?v=11"></script>
+</body>
+</html>

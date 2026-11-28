@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07050c" />
+<title>TIME BOMB — Last Depositor Wins</title>
+<link rel="icon" href="/game/timebomb.png" />
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/game/style.css?v=8" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <img class="logo" src="/game/timebomb.png" alt="Time Bomb" onerror="this.onerror=null;this.src='/shared/time-bomb.jpg'" />
+      <div>
+        <b data-i18n="brand.name">TIME BOMB</b>
+        <small data-i18n="brand.tagline">last depositor wins</small>
+      </div>
+    </div>
+          <div class="top-actions">
+      <button class="lang-btn" data-lang-toggle type="button" aria-label="Switch language">
+        <span data-lang-label>አማርኛ</span>
+      </button>
+      <button class="mute-btn" id="muteBtn" type="button" aria-label="Toggle fuse sound">
+        <span id="muteIcon" class="mute-on">🔊</span>
+      </button>
+      <button class="wallet" id="walletBtn" type="button">
+        <b id="balance">0</b><small data-i18n="common.etb">ETB</small>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ------------------------------- PLAY ------------------------------- -->
+    <section class="view active" data-view="play">
+      <div class="status-row">
+        <span class="chip live" id="statusChip"><i></i><span id="statusText" data-i18n="status.live">LIVE</span></span>
+        <span class="chip"><span data-i18n="chip.inRound">IN THE ROUND</span> <b id="playersChip">0</b></span>
+        <span class="chip"><span data-i18n="chip.round">ROUND</span> <b id="roundChip">#—</b></span>
+      </div>
+
+      <div class="bomb-card" id="bombCard">
+        <div class="ring">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <linearGradient id="fuseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffb62e" />
+                <stop offset="55%" stop-color="#ff7a18" />
+                <stop offset="100%" stop-color="#ff2d55" />
+              </linearGradient>
+            </defs>
+            <circle class="track" cx="100" cy="100" r="88" />
+            <circle class="prog" id="ring" cx="100" cy="100" r="88" />
+          </svg>
+          <div class="ring-inner">
+            <div class="fuse-label" data-i18n="timer.fuse">fuse</div>
+            <div class="clock" id="clock">30</div>
+            <div class="clock-unit" id="clockUnit" data-i18n="timer.sec">SEC</div>
+          </div>
+        </div>
+
+        <div class="pot-block">
+          <div class="pot-label" data-i18n="pot.label">THE POT</div>
+          <div class="pot"><b id="pot">0</b><span data-i18n="common.etb">ETB</span></div>
+        </div>
+
+        <div class="last" id="lastLine" data-i18n="last.none">No one has pushed in yet — be first</div>
+      </div>
+
+      <button class="deposit-btn" id="depositBtn" type="button">
+        <span class="dep-main" id="depMain">PUSH IN <b id="feeBtn">50</b> ETB</span>
+        <span class="dep-sub" id="depSub">resets the fuse to 15s · winner takes 90%</span>
+      </button>
+      <p class="fineprint" id="hint" data-i18n="hint.default">Every push adds to the pot and puts your name on it. When the fuse dies, the last name on the pot wins.</p>
+
+      <div class="feed-card">
+        <div class="feed-head"><h3 data-i18n="feed.title">Live pushes</h3><span id="feedCount">—</span></div>
+        <ul class="feed" id="feed"><li class="empty" data-i18n="feed.empty">Waiting for the first push…</li></ul>
+      </div>
+    </section>
+
+    <!-- ------------------------------- BOARD ------------------------------ -->
+    <section class="view" data-view="board">
+      <div class="proof board-proof">
+        <div class="tile"><small data-i18n="board.paid">Paid to winners</small><b id="statPaid">0</b></div>
+        <div class="tile"><small data-i18n="board.rounds">Bombs played</small><b id="statRounds">0</b></div>
+        <div class="tile"><small data-i18n="board.maxPot">Biggest pot</small><b id="statMax">0</b></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="board.topWinners">Top winners</h2>
+        <div id="leaders"><p class="empty-note" data-i18n="board.noWinners">No winners yet — be the first.</p></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="board.recent">Recent bombs</h2>
+        <div id="history"><p class="empty-note" data-i18n="board.noRounds">Round history will show up here.</p></div>
+      </div>
+    </section>
+
+    <!-- -------------------------------- ME -------------------------------- -->
+    <section class="view" data-view="me">
+      <div class="card" id="accountCard">
+        <div class="profile-head">
+          <div class="avatar" id="avatar">?</div>
+          <div>
+            <h2 id="meName">Guest</h2>
+            <p id="meSub">Open from Telegram to play</p>
+          </div>
+        </div>
+        <div class="proof" style="margin-bottom: 4px">
+          <div class="tile"><small data-i18n="me.wallet">Wallet</small><b id="meBalance">0</b></div>
+          <div class="tile"><small data-i18n="me.wins">Wins</small><b id="meWins">0</b></div>
+          <div class="tile"><small data-i18n="me.winnings">Winnings</small><b id="meWinnings">0</b></div>
+          <div class="tile"><small data-i18n="me.pushes">Pushes</small><b id="mePushes">0</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="me.rulesTitle">How the bomb works</h2>
+        <ul class="rules">
+          <li><span>01</span><span data-i18n="me.rules1">The fuse starts at 30 seconds. Every push resets it.</span></li>
+          <li><span>02</span><span data-i18n="me.rules2">Each push costs the fixed entry fee and grows the pot.</span></li>
+          <li><span>03</span><span data-i18n="me.rules3">When the fuse hits 00:00 nobody can push anymore.</span></li>
+          <li><span>04</span><span data-i18n="me.rules4">The last depositor takes 90% of the pot. The house keeps 10%.</span></li>
+          <li><span>05</span><span data-i18n="me.rules5">The winner is paid into their wallet the instant the fuse dies.</span></li>
+        </ul>
+      </div>
+      <p class="fineprint" data-i18n="me.footnote">Play money only. Wallets are topped up by the admin until a payment provider is connected.</p>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button type="button" data-tab="play" class="active"><i>💣</i><span data-i18n="nav.play">PLAY</span></button>
+    <button type="button" data-tab="board"><i>🏆</i><span data-i18n="nav.board">BOARD</span></button>
+    <button type="button" data-tab="me"><i>👤</i><span data-i18n="nav.me">ME</span></button>
+  </nav>
+</div>
+
+<!-- round result -->
+<div class="winner" id="winner">
+  <div class="winner-card">
+    <div class="boom">💥</div>
+    <div class="w-label" data-i18n="winner.label">FUSE BURNED OUT</div>
+    <div class="w-name" id="winName">—</div>
+    <div class="w-took" data-i18n="winner.took">was the last one in and takes</div>
+    <div class="w-amount" id="winAmount">0 ETB</div>
+    <div class="w-cut" id="winCut"></div>
+    <div class="w-next" id="winNext"></div>
+  </div>
+</div>
+
+<!-- detonation: flash, shockwaves and embers (populated by app.js) -->
+<div class="explosion" id="explosion" aria-hidden="true"></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shared/i18n.js?v=17"></script>
+<script src="/game/app.js?v=11"></script>
+</body>
+</html>
