@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07050c" />
+<title>GAMES — Time Bomb</title>
+<link rel="icon" href="/game/timebomb.png" />
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #07050c;
+    --line: rgba(255, 255, 255, 0.09);
+    --ink: #f4eefc;
+    --dim: rgba(244, 238, 252, 0.55);
+    --dim-2: rgba(244, 238, 252, 0.35);
+    --red: #ff3b2f;
+    --orange: #ff7a18;
+    --amber: #ffb62e;
+    --green: #2ee08a;
+    --violet: #8b5cf6;
+    --font: 'Space Grotesk', 'Noto Sans Ethiopic', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'Orbitron', 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(255, 59, 47, 0.18), transparent 55%),
+      radial-gradient(circle at 120% 25%, rgba(139, 92, 246, 0.14), transparent 45%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  button { font-family: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+
+  .app {
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    padding: 0 16px calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(14px + env(safe-area-inset-top)) 0 18px;
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand .logo {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 182, 46, 0.3);
+    box-shadow: 0 0 20px -4px rgba(255, 122, 24, 0.62);
+  }
+  .brand > div { min-width: 0; }
+  .brand b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .brand small {
+    display: block;
+    margin-top: 2px;
+    color: var(--dim);
+    font-size: 11.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lang-btn {
+    flex: none;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .lang-btn:active { transform: scale(0.96); }
+
+  .top-right { display: flex; align-items: center; gap: 8px; flex: none; }
+
+  /* -------------------------------- wallet ------------------------------- */
+
+  .wallet-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 182, 46, 0.34);
+    background: rgba(255, 182, 46, 0.1);
+    color: var(--amber);
+    font-family: var(--mono);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .wallet-chip:active { transform: scale(0.95); }
+  .wallet-chip b { font-size: 12px; font-weight: 700; }
+  .wallet-chip small { font-size: 8px; font-weight: 600; opacity: 0.72; letter-spacing: 0.08em; }
+
+  .sheet-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 10px;
+    background: rgba(4, 2, 8, 0.7);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .sheet-wrap.open { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+    padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+    border-radius: 24px;
+    border: 1px solid rgba(255, 182, 46, 0.2);
+    background: linear-gradient(170deg, #1a1226, #0a0712 62%);
+    box-shadow: 0 -24px 60px -18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: translateY(16px);
+    transition: transform 0.2s ease;
+  }
+  .sheet-wrap.open .sheet { transform: translateY(0); }
+
+  .sheet-grip { width: 38px; height: 4px; margin: 0 auto 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); }
+  .sheet-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--dim);
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .sheet-head { display: flex; flex-direction: column; gap: 4px; padding-right: 34px; }
+  .sheet-head small { color: var(--dim-2); font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .sheet-head b { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--amber); }
+  .sheet-head b span:last-child { font-size: 11px; color: var(--dim); }
+
+  .seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 16px 0 14px;
+    padding: 4px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .seg-btn {
+    padding: 9px 10px;
+    border-radius: 10px;
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .seg-btn.active { background: linear-gradient(135deg, var(--orange), var(--red)); color: #fff; }
+
+  .pane { display: block; }
+  .pane[hidden] { display: none; }
+
+  .pay-label { margin: 0 0 8px; color: var(--dim); font-size: 12.5px; }
+  .pay-num {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px dashed rgba(255, 182, 46, 0.4);
+    background: rgba(255, 182, 46, 0.07);
+  }
+  .pay-num b { font-family: var(--mono); font-size: 18px; letter-spacing: 0.06em; color: #ffd58a; }
+  .copy-btn { padding: 7px 11px; border-radius: 10px; background: rgba(255, 255, 255, 0.1); color: var(--ink); font-size: 11px; font-weight: 600; }
+  .copy-btn:active { transform: scale(0.96); }
+
+  .steps { margin: 12px 0 14px; padding-left: 18px; color: var(--dim); font-size: 12px; line-height: 1.6; }
+  .steps li + li { margin-top: 4px; }
+
+  .field { display: block; margin-top: 10px; }
+  .field > span {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--dim-2);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    resize: vertical;
+  }
+  .field input:focus,
+  .field textarea:focus { outline: none; border-color: rgba(255, 182, 46, 0.5); }
+  .field textarea { min-height: 78px; line-height: 1.5; }
+
+  .sheet-submit {
+    width: 100%;
+    margin-top: 14px;
+    padding: 13px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: 0 12px 24px -14px rgba(255, 59, 47, 0.9);
+  }
+  .sheet-submit:disabled { opacity: 0.6; }
+  .sheet-note { margin: 10px 0 0; color: var(--dim-2); font-size: 11px; line-height: 1.5; }
+  .sheet-msg { min-height: 16px; margin: 12px 0 0; font-size: 12px; line-height: 1.5; }
+  .sheet-msg[data-kind="ok"] { color: var(--green); }
+  .sheet-msg[data-kind="bad"] { color: #ff9a8f; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet-wrap,
+    .sheet { transition: none; }
+  }
+
+
+
+  /* ------------------------------ game card ------------------------------ */
+
+  .featured {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    padding: 20px 16px 16px;
+    border-radius: 26px;
+    text-decoration: none;
+    color: inherit;
+    background:
+      radial-gradient(circle at 82% 8%, rgba(255, 122, 24, 0.22), transparent 52%),
+      linear-gradient(160deg, rgba(255, 59, 47, 0.16), rgba(139, 92, 246, 0.12) 62%, rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 138, 60, 0.3);
+    box-shadow:
+      0 22px 44px -22px rgba(255, 59, 47, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+  .featured:active { transform: scale(0.985); box-shadow: 0 12px 26px -18px rgba(255, 59, 47, 0.7); }
+
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(46, 224, 138, 0.13);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .chip i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 0 currentColor;
+    animation: dot 1.8s ease-out infinite;
+  }
+  .chip[data-phase="paused"] { background: rgba(255, 182, 46, 0.14); color: var(--amber); }
+  .chip[data-phase="arming"] { background: rgba(139, 92, 246, 0.16); color: #c4b5fd; }
+  .chip[data-phase="offline"] { background: rgba(255, 255, 255, 0.06); color: var(--dim-2); }
+  .chip[data-phase="offline"] i { animation: none; }
+
+  .featured-tag {
+    padding: 5px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.62);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .card-main { display: flex; align-items: center; gap: 14px; margin: 16px 0 18px; }
+
+  .bomb-disc {
+    position: relative;
+    flex: none;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, rgba(255, 182, 46, 0.42), rgba(255, 59, 47, 0.16) 62%, transparent 72%);
+    box-shadow: 0 0 0 1px rgba(255, 182, 46, 0.24), 0 0 34px -6px rgba(255, 122, 24, 0.55);
+  }
+  .bomb-disc img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .bomb-disc::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 182, 46, 0.32);
+    animation: ring 2.6s ease-out infinite;
+  }
+
+  .card-text { min-width: 0; }
+  .card-text h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    line-height: 1.05;
+    background: linear-gradient(100deg, #fff, #ffc86b 55%, #ff7a18);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .card-text p { margin: 6px 0 0; color: var(--dim); font-size: 12.5px; letter-spacing: 0.02em; }
+
+  .card-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .mini { min-width: 0; }
+  .mini + .mini { padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, 0.12); }
+  .mini small {
+    display: block;
+    color: var(--dim-2);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .mini b { display: block; margin-top: 3px; font-family: var(--mono); font-size: 15px; font-weight: 700; white-space: nowrap; }
+  .mini b span { font-size: 10px; color: var(--dim); font-weight: 600; }
+
+  .play {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 10px 22px -12px rgba(255, 59, 47, 0.9);
+  }
+
+  /* ------------------------------- game card ------------------------------ */
+
+  .game-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(160deg, rgba(139, 92, 246, 0.14), rgba(255, 255, 255, 0.03));
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease;
+  }
+  .game-card:active { transform: scale(0.99); }
+  .game-card .art {
+    flex: none;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 182, 46, 0.28);
+    box-shadow: 0 0 20px -6px rgba(255, 122, 24, 0.55);
+  }
+  .game-card .art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .game-card .art.keno-art {
+    display: grid;
+    place-items: center;
+    font-size: 27px;
+    background: radial-gradient(circle at 30% 25%, rgba(46, 224, 138, 0.4), rgba(30, 169, 106, 0.16) 60%, rgba(255, 255, 255, 0.03));
+  }
+  .game-card .art.mines-art {
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    background: radial-gradient(circle at 30% 25%, rgba(255, 182, 46, 0.42), rgba(255, 122, 24, 0.16) 60%, rgba(255, 255, 255, 0.03));
+  }
+  .game-card .info { flex: 1; min-width: 0; }
+  .game-card h3 { margin: 0; font-family: var(--mono); font-size: 15px; letter-spacing: 0.08em; }
+  .game-card p { margin: 3px 0 0; color: var(--dim); font-size: 11.5px; }
+  .game-card .live-tag {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(46, 224, 138, 0.12);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+  .game-card .live-tag i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: dot 1.8s ease-out infinite;
+  }
+
+  /* ------------------------------ more games ----------------------------- */
+
+  .section {
+    margin: 28px 0 10px;
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .soon-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .soon {
+    display: grid;
+    place-items: center;
+    gap: 7px;
+    padding: 22px 10px;
+    border-radius: 18px;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+    text-align: center;
+  }
+  .soon span { font-size: 21px; opacity: 0.4; }
+  .soon small {
+    color: var(--dim-2);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .fineprint {
+    margin: 24px 0 0;
+    color: var(--dim-2);
+    font-size: 11px;
+    line-height: 1.55;
+    text-align: center;
+  }
+
+  @keyframes dot {
+    0% { box-shadow: 0 0 0 0 rgba(46, 224, 138, 0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(46, 224, 138, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 224, 138, 0); }
+  }
+  @keyframes ring {
+    0% { transform: scale(0.92); opacity: 0.9; }
+    70% { transform: scale(1.16); opacity: 0; }
+    100% { transform: scale(1.16); opacity: 0; }
+  }
+
+  @media (max-width: 380px) {
+    .brand small { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip i, .bomb-disc::after { animation: none; }
+    .featured, .featured:active { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <img class="logo" src="/game/timebomb.png" alt="Time Bomb" onerror="this.onerror=null;this.src='/shared/time-bomb.jpg'" />
+      <div>
+        <b data-i18n="menu.title">GAMES</b>
+        <small data-i18n="menu.sub">Pick a game and start playing</small>
+      </div>
+    </div>
+    <div class="top-right">
+      <button class="lang-btn" data-lang-toggle type="button" aria-label="Switch language">
+        <span data-lang-label>አማርኛ</span>
+      </button>
+      <button class="wallet-chip" id="walletChip" type="button" aria-label="Wallet">
+        <b id="walletAmount">0</b>
+        <small data-i18n="common.etb">ETB</small>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Featured game: Time Bomb is always first in the menu. -->
+    <a class="featured" id="gameLink" href="/game">
+      <div class="card-top">
+        <span class="chip" id="menuChip" data-phase="live"><i></i><span id="menuChipText" data-i18n="menu.live">LIVE</span></span>
+        <span class="featured-tag" data-i18n="menu.featured">FEATURED</span>
+      </div>
+
+      <div class="card-main">
+        <div class="bomb-disc" aria-hidden="true"><img src="/game/timebomb.png" alt="" onerror="this.onerror=null;this.src='/shared/time-bomb.jpg'" /></div>
+        <div class="card-text">
+          <h1 data-i18n="brand.name">TIME BOMB</h1>
+          <p data-i18n="brand.tagline">last depositor wins</p>
+        </div>
+      </div>
+
+      <div class="card-foot">
+        <div class="mini">
+          <small data-i18n="menu.pot">POT</small>
+          <b><span id="menuPot">0</span> <span data-i18n="common.etb">ETB</span></b>
+        </div>
+        <div class="mini">
+          <small data-i18n="menu.fuse">FUSE</small>
+          <b><span id="menuFuse">—</span><span>s</span></b>
+        </div>
+        <span class="play" data-i18n="menu.play">PLAY NOW →</span>
+      </div>
+    </a>
+
+    <a class="game-card" id="crashLink" href="/crash">
+      <span class="art" aria-hidden="true"><img src="/shared/crash.jpg" alt="" /></span>
+      <span class="info">
+        <h3>CRASH</h3>
+        <p data-i18n="menu.crashSub">Cash out before it flies away</p>
+      </span>
+      <span class="live-tag"><i></i><span id="crashValue" data-i18n="menu.live">LIVE</span></span>
+    </a>
+
+    <a class="game-card" id="kenoLink" href="/keno">
+      <span class="art keno-art" aria-hidden="true">🔢</span>
+      <span class="info">
+        <h3>KENO</h3>
+        <p data-i18n="menu.kenoSub">Pick your numbers, 20 are drawn</p>
+      </span>
+      <span class="live-tag"><i></i><span data-i18n="menu.live">LIVE</span></span>
+    </a>
+
+    <a class="game-card" id="minesLink" href="/mines">
+      <span class="art mines-art" aria-hidden="true">💎</span>
+      <span class="info">
+        <h3>MINES</h3>
+        <p data-i18n="menu.minesSub">Find the diamonds, dodge the bombs</p>
+      </span>
+      <span class="live-tag"><i></i><span id="minesState" data-i18n="menu.live">LIVE</span></span>
+    </a>
+
+    <h2 class="section" data-i18n="menu.more">More games</h2>
+    <div class="soon-row">
+      <div class="soon"><span aria-hidden="true">🎰</span><small data-i18n="menu.coming">COMING SOON</small></div>
+    </div>
+
+    <p class="fineprint" data-i18n="menu.footer">Play money only. More games are on the way.</p>
+  </main>
+</div>
+
+<!-- wallet: Telebirr deposit and withdrawal requests -->
+<div class="sheet-wrap" id="walletSheet" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Wallet">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <button class="sheet-close" id="sheetClose" type="button" aria-label="Close">✕</button>
+
+    <div class="sheet-head">
+      <small data-i18n="wallet.label">WALLET</small>
+      <b><span id="sheetBalance">0</span> <span data-i18n="common.etb">ETB</span></b>
+    </div>
+
+    <div class="seg">
+      <button class="seg-btn active" type="button" data-pane="deposit" data-i18n="wallet.deposit">Deposit</button>
+      <button class="seg-btn" type="button" data-pane="withdraw" data-i18n="wallet.withdraw">Withdraw</button>
+    </div>
+
+    <div class="pane" id="paneDeposit">
+      <p class="pay-label" data-i18n="wallet.sendTo">Send money to this Telebirr number</p>
+      <div class="pay-num">
+        <b id="telebirrNumber">0962577855</b>
+        <button class="copy-btn" id="copyNumber" type="button" data-i18n="wallet.copy">Copy</button>
+      </div>
+      <ol class="steps">
+        <li data-i18n="wallet.step1">Open Telebirr and send the amount you want to add.</li>
+        <li data-i18n="wallet.step2">Copy the confirmation message Telebirr sends you.</li>
+        <li data-i18n="wallet.step3">Paste that message below and send the request.</li>
+      </ol>
+      <label class="field">
+        <span data-i18n="wallet.amount">Amount (ETB)</span>
+        <input id="depositAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="100" />
+      </label>
+      <label class="field">
+        <span data-i18n="wallet.paste">Transaction message</span>
+        <textarea id="depositText" rows="4" maxlength="600" data-i18n-ph="wallet.pastePh" placeholder="Paste the Telebirr message here…"></textarea>
+      </label>
+      <button class="sheet-submit" id="depositSubmit" type="button" data-i18n="wallet.submitDeposit">SEND DEPOSIT REQUEST</button>
+      <p class="sheet-note" data-i18n="wallet.depositNote">The admin checks your message and credits your wallet.</p>
+    </div>
+
+    <div class="pane" id="paneWithdraw" hidden>
+      <label class="field">
+        <span data-i18n="wallet.amount">Amount (ETB)</span>
+        <input id="withdrawAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="100" />
+      </label>
+      <label class="field">
+        <span data-i18n="wallet.phone">Your Telebirr number</span>
+        <input id="withdrawPhone" type="tel" inputmode="tel" maxlength="20" data-i18n-ph="wallet.phonePh" placeholder="09xxxxxxxx" />
+      </label>
+      <button class="sheet-submit" id="withdrawSubmit" type="button" data-i18n="wallet.submitWithdraw">SEND WITHDRAW REQUEST</button>
+      <p class="sheet-note" data-i18n="wallet.withdrawNote">The admin sends the money to your Telebirr number.</p>
+    </div>
+
+    <p class="sheet-msg" id="sheetMsg"></p>
+  </div>
+</div>
+
+<script src="/shared/i18n.js?v=17"></script>
+<script>
+(function () {
+  'use strict';
+
+  var t = window.I18n ? window.I18n.t : function (key) { return key; };
+
+  /* ---------------------------- Telegram shell ---------------------------- */
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) {
+    try {
+      tg.ready();
+      tg.expand();
+      if (tg.setHeaderColor) tg.setHeaderColor('#07050c');
+      if (tg.setBackgroundColor) tg.setBackgroundColor('#07050c');
+      if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+    } catch (err) {
+      /* older Telegram clients */
+    }
+  }
+
+  /* ------------------------------- game link ------------------------------ */
+  var link = document.getElementById('gameLink');
+  if (new URLSearchParams(location.search).get('dev') === '1') link.href = '/game?dev=1';
+  link.addEventListener('click', function () {
+    if (tg && tg.HapticFeedback) {
+      try { tg.HapticFeedback.impactOccurred('medium'); } catch (err) { /* no haptics */ }
+    }
+  });
+
+  /* ------------------------------- crash card ------------------------------ */
+  var crashLink = document.getElementById('crashLink');
+  if (new URLSearchParams(location.search).get('dev') === '1') crashLink.href = '/crash?dev=1';
+
+  var kenoLink = document.getElementById('kenoLink');
+  if (new URLSearchParams(location.search).get('dev') === '1') kenoLink.href = '/keno?dev=1';
+
+  var minesLink = document.getElementById('minesLink');
+  if (new URLSearchParams(location.search).get('dev') === '1') minesLink.href = '/mines?dev=1';
+
+  var minesState = document.getElementById('minesState');
+  async function refreshMines() {
+    try {
+      var res = await fetch('/api/mines/state', { cache: 'no-store' });
+      if (!res.ok) throw new Error('mines');
+      var s = await res.json();
+      minesState.textContent = s.paused ? t('status.paused') : t('menu.live');
+    } catch (err) {
+      minesState.textContent = t('menu.offline');
+    }
+  }
+  refreshMines();
+  setInterval(refreshMines, 10000);
+
+  var crashValue = document.getElementById('crashValue');
+  async function refreshCrash() {
+    try {
+      var res = await fetch('/api/crash/state', { cache: 'no-store' });
+      if (!res.ok) throw new Error('crash');
+      var s = await res.json();
+      if (s.phase === 'running') crashValue.textContent = Number(s.multiplier).toFixed(2) + 'x';
+      else if (s.phase === 'betting') crashValue.textContent = t('menu.betting');
+      else if (s.phase === 'crashed') crashValue.textContent = Number(s.crashAt).toFixed(2) + 'x';
+      else crashValue.textContent = t('menu.offline');
+    } catch (err) {
+      crashValue.textContent = t('menu.offline');
+    }
+  }
+  refreshCrash();
+  setInterval(refreshCrash, 4000);
+
+  /* --------------------------- live pot and fuse -------------------------- */
+  var potEl = document.getElementById('menuPot');
+  var fuseEl = document.getElementById('menuFuse');
+  var chip = document.getElementById('menuChip');
+  var chipText = document.getElementById('menuChipText');
+
+  var phase = 'live';   // live | arming | paused | offline
+  var endAt = 0;
+
+  function paint() {
+    chip.setAttribute('data-phase', phase);
+    chipText.textContent =
+      phase === 'live'
+        ? t('menu.live')
+        : phase === 'paused'
+          ? t('status.paused')
+          : phase === 'arming'
+            ? t('status.arming')
+            : t('menu.offline');
+    fuseEl.textContent = phase === 'live' ? String(Math.max(0, Math.ceil((endAt - Date.now()) / 1000))) : '—';
+  }
+
+  async function refresh() {
+    try {
+      var res = await fetch('/api/state', { cache: 'no-store' });
+      if (!res.ok) throw new Error('state');
+      var state = await res.json();
+      var round = state.round;
+      var running = !!round && round.status === 'live' && !state.paused;
+
+      potEl.textContent = Math.round((round && round.pot) || 0).toLocaleString('en-US');
+      phase = running ? 'live' : state.paused ? 'paused' : round ? 'arming' : 'offline';
+      endAt = Date.now() + (running ? Math.max(0, state.msLeft || 0) : 0);
+    } catch (err) {
+      phase = 'offline';
+    }
+    paint();
+  }
+
+  refresh();
+  setInterval(paint, 250);
+  setInterval(refresh, 5000);
+
+  if (window.I18n) window.I18n.onChange(function () { paint(); refreshMines(); });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refresh();
+  });
+
+  /* -------------------------------- wallet -------------------------------- */
+  var W = { token: '', me: null, busy: false };
+
+  var walletChip = document.getElementById('walletChip');
+  var walletAmount = document.getElementById('walletAmount');
+  var sheet = document.getElementById('walletSheet');
+  var sheetBalance = document.getElementById('sheetBalance');
+  var sheetMsg = document.getElementById('sheetMsg');
+
+  var money = function (n) {
+    return Math.max(0, Math.round(Number(n) || 0)).toLocaleString('en-US');
+  };
+
+  function msg(text, kind) {
+    sheetMsg.textContent = text || '';
+    if (kind) sheetMsg.setAttribute('data-kind', kind);
+    else sheetMsg.removeAttribute('data-kind');
+  }
+
+  function paintWallet() {
+    walletAmount.textContent = money(W.me ? W.me.balance : 0);
+    sheetBalance.textContent = money(W.me ? W.me.balance : 0);
+  }
+
+  async function apiWallet(path, body) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (W.token) headers.Authorization = 'Bearer ' + W.token;
+    var res = await fetch(path, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    var data = {};
+    try {
+      data = await res.json();
+    } catch (err) {
+      /* empty body */
+    }
+    if (!res.ok) {
+      var text = data.error || 'Request failed (' + res.status + ')';
+      if (data.code) {
+        var translated = t('err.' + data.code);
+        if (translated && translated !== 'err.' + data.code) text = translated;
+      }
+      var error = new Error(text);
+      error.status = res.status;
+      throw error;
+    }
+    return data;
+  }
+
+  async function signInWallet() {
+    var payload = { initData: (tg && tg.initData) || '' };
+    try {
+      var devId = localStorage.getItem('tb_dev_id');
+      if (!devId) {
+        devId = Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('tb_dev_id', devId);
+      }
+      payload.devId = devId;
+    } catch (err) {
+      payload.devId = 'local';
+    }
+    if (new URLSearchParams(location.search).get('dev') === '1') payload.devBypass = true;
+    try {
+      var data = await apiWallet('/api/auth/telegram', payload);
+      W.token = data.token;
+      W.me = data.user;
+    } catch (err) {
+      W.token = '';
+      W.me = null;
+    }
+    paintWallet();
+  }
+
+  function setSheet(open) {
+    sheet.classList.toggle('open', open);
+    sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (!open) return;
+    msg('');
+    paintWallet();
+    if (W.token) {
+      apiWallet('/api/me')
+        .then(function (data) {
+          W.me = data.user;
+          paintWallet();
+        })
+        .catch(function () {});
+    }
+  }
+
+  walletChip.addEventListener('click', function () {
+    if (tg && tg.HapticFeedback) {
+      try { tg.HapticFeedback.impactOccurred('light'); } catch (err) { /* no haptics */ }
+    }
+    setSheet(true);
+  });
+  document.getElementById('sheetClose').addEventListener('click', function () { setSheet(false); });
+  sheet.addEventListener('click', function (event) {
+    if (event.target === sheet) setSheet(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') setSheet(false);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.seg-btn'), function (btn) {
+    btn.addEventListener('click', function () {
+      var pane = btn.getAttribute('data-pane');
+      Array.prototype.forEach.call(document.querySelectorAll('.seg-btn'), function (other) {
+        other.classList.toggle('active', other === btn);
+      });
+      document.getElementById('paneDeposit').hidden = pane !== 'deposit';
+      document.getElementById('paneWithdraw').hidden = pane !== 'withdraw';
+      msg('');
+    });
+  });
+
+  document.getElementById('copyNumber').addEventListener('click', async function () {
+    var number = document.getElementById('telebirrNumber').textContent.trim();
+    try {
+      await navigator.clipboard.writeText(number);
+    } catch (err) {
+      // Older Telegram clients have no clipboard permission: select it instead.
+      var range = document.createRange();
+      range.selectNodeContents(document.getElementById('telebirrNumber'));
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    msg(t('wallet.copied'), 'ok');
+  });
+
+  async function sendRequest(button, path, body) {
+    if (W.busy) return false;
+    W.busy = true;
+    var label = button.textContent;
+    button.disabled = true;
+    button.textContent = t('wallet.sending');
+    try {
+      await apiWallet(path, body);
+      msg(t('wallet.sent'), 'ok');
+      if (tg && tg.HapticFeedback) {
+        try { tg.HapticFeedback.notificationOccurred('success'); } catch (err) { /* no haptics */ }
+      }
+      return true;
+    } catch (err) {
+      msg(err.message, 'bad');
+      return false;
+    } finally {
+      W.busy = false;
+      button.disabled = false;
+      button.textContent = label;
+    }
+  }
+
+  document.getElementById('depositSubmit').addEventListener('click', async function () {
+    var amount = Math.round(Number(document.getElementById('depositAmount').value) || 0);
+    var text = document.getElementById('depositText').value.trim();
+    if (amount <= 0) return msg(t('wallet.needAmount'), 'bad');
+    if (text.length < 6) return msg(t('wallet.needText'), 'bad');
+    if (!W.token) await signInWallet();
+    var sent = await sendRequest(this, '/api/wallet/deposit', { amount: amount, text: text });
+    if (sent) {
+      document.getElementById('depositAmount').value = '';
+      document.getElementById('depositText').value = '';
+    }
+  });
+
+  document.getElementById('withdrawSubmit').addEventListener('click', async function () {
+    var amount = Math.round(Number(document.getElementById('withdrawAmount').value) || 0);
+    var phone = document.getElementById('withdrawPhone').value.replace(/[\s-]/g, '');
+    if (amount <= 0) return msg(t('wallet.needAmount'), 'bad');
+    if (!/^(?:\+?251|0)?9\d{8}$/.test(phone)) return msg(t('wallet.needPhone'), 'bad');
+    if (!W.token) await signInWallet();
+    var sent = await sendRequest(this, '/api/wallet/withdraw', { amount: amount, phone: phone });
+    if (sent) document.getElementById('withdrawAmount').value = '';
+  });
+
+  signInWallet().then(function () {
+    if (new URLSearchParams(location.search).get('wallet') === '1') setSheet(true);
+  });
+  setInterval(function () {
+    if (document.hidden || !W.token) return;
+    apiWallet('/api/me')
+      .then(function (data) {
+        W.me = data.user;
+        paintWallet();
+      })
+      .catch(function () {});
+  }, 20000);
+})();
+</script>
+</body>
+</html>
